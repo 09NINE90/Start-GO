@@ -1,7 +1,7 @@
 package main
 
 import (
-	"GoStart/api"
+	"GoStart/go/api"
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"

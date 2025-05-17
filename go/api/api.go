@@ -1,8 +1,8 @@
 package api
 
 import (
-	"GoStart/database"
-	"GoStart/models"
+	"GoStart/go/database"
+	"GoStart/go/models"
 	"encoding/json"
 	"fmt"
 	"io"

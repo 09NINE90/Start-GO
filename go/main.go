@@ -1,7 +1,7 @@
 package main
 
 import (
-	"GoStart/database"
+	"GoStart/go/database"
 	"fmt"
 	"github.com/joho/godotenv"
 	"log"
