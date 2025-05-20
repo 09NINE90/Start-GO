@@ -1,6 +1,7 @@
 package main
 
 import (
+	"GoStart/go/api"
 	"GoStart/go/database"
 	"fmt"
 	"github.com/joho/godotenv"
@@ -30,7 +31,7 @@ func main() {
 	defer database.CloseDB()
 	port := ":7070"
 	log.Printf("Starting server at port %v", port)
-	if err := http.ListenAndServe(port, Router()); err != nil {
+	if err := http.ListenAndServe(port, api.Router()); err != nil {
 		log.Fatalf("Error starting the server: %v", err)
 	}
 }

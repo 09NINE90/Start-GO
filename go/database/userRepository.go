@@ -1,11 +1,11 @@
 package database
 
 import (
-	models2 "GoStart/go/models"
+	models "GoStart/go/models"
 	"fmt"
 )
 
-func GetAllUsers() ([]models2.User, error) {
+func GetAllUsers() ([]models.User, error) {
 	query := `
 	SELECT
 		u.id AS id,
@@ -31,10 +31,10 @@ func GetAllUsers() ([]models2.User, error) {
 	}
 	defer rows.Close()
 
-	var users []models2.User
+	var users []models.User
 	for rows.Next() {
-		var user models2.User
-		var profile models2.UserProfile
+		var user models.User
+		var profile models.UserProfile
 
 		err := rows.Scan(
 			&user.ID,

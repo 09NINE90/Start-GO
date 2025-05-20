@@ -1,65 +1,46 @@
 package api
 
 import (
-	"GoStart/go/database"
-	"GoStart/go/models"
-	"encoding/json"
+	"GoStart/go/api/handlers"
+	"GoStart/go/config"
 	"fmt"
-	"io"
-	"log"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
+	"github.com/go-chi/jwtauth/v5"
 	"net/http"
 )
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome to the home page!")
-}
+func Router() http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
-func AboutHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "This is the about page.")
-}
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 
-func GetFormHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
+	r.Get("/", handlers.HomeHandler)
+	r.Get("/about", handlers.AboutHandler)
+	r.Get("/user", handlers.GetUserHandler)
+	r.Post("/user", handlers.PostUserHandler)
 
-	users, err := database.GetAllUsers()
-	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"status":"error","message":"%v"}`, err), http.StatusInternalServerError)
-		return
-	}
+	r.Group(func(r chi.Router) {
+		r.Use(jwtauth.Verifier(config.TokenAuth))
+		r.Use(jwtauth.Authenticator(config.TokenAuth))
 
-	// Формируем ответ
-	response := map[string]interface{}{
-		"status": "success",
-		"users":  users,
-	}
-
-	// Кодируем и отправляем JSON
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, `{"status":"error","message":"failed to encode json"}`, http.StatusInternalServerError)
-	}
-}
-
-func PostFormHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
-	person, err := models.PersonFromJSON(body)
-	if err != nil {
-		http.Error(w, "Error parsing JSON", http.StatusBadRequest)
-		return
-	}
-	log.Printf("Received data: Name=%s, Email=%s, Age=%d",
-		person.GetName(), person.GetEmail(), person.GetAge())
-
-	models.NewPerson(person.GetName(), person.GetEmail(), person.GetAge())
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"status":  "success",
-		"message": fmt.Sprintf("Hello %s, your data has been received", person.GetName()),
+		r.Get("/admin", func(w http.ResponseWriter, r *http.Request) {
+			_, claims, _ := jwtauth.FromContext(r.Context())
+			w.Write([]byte(fmt.Sprintf("protected area. hi %v", claims["user_id"])))
+		})
 	})
+
+	return r
 }
