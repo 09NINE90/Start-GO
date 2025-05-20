@@ -2,9 +2,14 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 )
 
 func AboutHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "This is the about page.")
+	massage, err := fmt.Fprintf(w, "This is the about page.")
+	if err != nil {
+		return
+	}
+	log.Println(massage)
 }
